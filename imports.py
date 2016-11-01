@@ -210,7 +210,7 @@ def dibujarmapa(archivo,ls_todos,ls_muros,ls_elementos,ls_DL):
     try:
         for ey, punto in enumerate(mapa):
             for ex,cd in enumerate(punto):
-                if((interprete.get(cd, "muro") == "si") and (interprete.get(cd, "bloqueo") == "si") and (interprete.get(cd, "puerta") == "no")):
+                if((interprete.get(cd, "muro") == "si") and (interprete.get(cd, "bloqueo") == "si") and (interprete.get(cd, "puerta") == "no") and (interprete.get(cd, "vida") == "no")):
                     #Muros
                     vx = interprete.get(cd, "vx")
                     vy = interprete.get(cd, "vy")
@@ -223,7 +223,7 @@ def dibujarmapa(archivo,ls_todos,ls_muros,ls_elementos,ls_DL):
                     ls_todos.add(m)
 
                 else:
-                    if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "no") and (interprete.get(cd, "puerta") == "no")):
+                    if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "no") and (interprete.get(cd, "puerta") == "no") and (interprete.get(cd, "vida") == "no")):
                         #Ese es pasto
                         vx = interprete.get(cd, "vx")
                         vy = interprete.get(cd, "vy")
@@ -233,7 +233,7 @@ def dibujarmapa(archivo,ls_todos,ls_muros,ls_elementos,ls_DL):
                         ls_elementos.add(m)
                         ls_todos.add(m)
                     else:
-                        if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "si") and (interprete.get(cd, "puerta") == "si")):
+                        if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "si") and (interprete.get(cd, "puerta") == "si") and (interprete.get(cd, "vida") == "no")):
                             #Esta es la puerta para ganar
                             vx = interprete.get(cd, "vx")
                             vy = interprete.get(cd, "vy")
@@ -247,7 +247,7 @@ def dibujarmapa(archivo,ls_todos,ls_muros,ls_elementos,ls_DL):
 
 
                         else:
-                            if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "si") and (interprete.get(cd, "puerta") == "no")):
+                            if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "si") and (interprete.get(cd, "puerta") == "no") and (interprete.get(cd, "vida") == "no")):
                                 #Dinamitas
                                 vx = interprete.get(cd, "vx")
                                 vy = interprete.get(cd, "vy")
@@ -260,6 +260,20 @@ def dibujarmapa(archivo,ls_todos,ls_muros,ls_elementos,ls_DL):
                                 ls_elementos.add(m)
                                 ls_todos.add(m)
                                 ls_DL.add(m)
+                            else:
+                                if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "no") and (interprete.get(cd, "puerta") == "no") and (interprete.get(cd, "vida") == "si")):
+                                    #Corazones
+                                    vx = interprete.get(cd, "vx")
+                                    vy = interprete.get(cd, "vy")
+                                    m = Elemento(ex*25,ey*25,"data/images/spritesterreno.png")
+                                    m.image=images[int(vx)][int(vy)]
+                                    m.tipo=interprete.get(cd, "nombre")
+                                    m.rect[2],m.rect[3] = 25,25 #Coreccion a la imagen
+                                    ls_muros.add(m)
+                                    ls_elementos.add(m)
+                                    ls_todos.add(m)
+                                    ls_DL.add(m)
+
     except:
         print("Archivo de configuracion corrupto reinstale el juego o contacte al soporte")
         sys.exit(0)
@@ -520,7 +534,7 @@ class Juego:
         ls_todos.add(jugador)
 
         m = dibujarmapa("map1.wr",ls_todos,ls_muros,ls_elementos,ls_DL)
-        
+
         ls_todos.draw(pantalla)
         ls_enemigos.draw(pantalla)
         ls_jugador.draw(pantalla)
