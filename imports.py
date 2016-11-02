@@ -472,7 +472,7 @@ class Boss(pygame.sprite.Sprite):
     image_abajo =  []
     image_derecha = []
     image_izquierda=[]
-
+    moves=[]
     def __init__(self, x,y):
         pygame.sprite.Sprite.__init__(self)
 
@@ -491,6 +491,86 @@ class Boss(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x=x
         self.rect.y=y
+        self.life = 1000
+        self.speed = 5
+        self.i=0
+        self.reloj = pygame.time.Clock()
+        self.cont = 0
+    def getLife(self):
+    	return self.life
+
+    def setLife(self,life):
+    	self.life = life
+
+    def getSpeed(self):
+        return self.speed
+
+    def restartMovements(self,pos):#calcula el camino por donde debe moverse (recibe el punto final)
+
+        p = [[self.rect.x,self.rect.y],pos]
+        x0 = p[0][0]
+        y0 = p[0][1]
+        x1 = p[1][0]
+        y1 = p[1][1]
+        res = []
+        dx = (x1 - x0)
+        dy = (y1 - y0)
+        if (dy < 0) :
+            dy = -1*dy
+            stepy = -1
+        else :
+            stepy = 1
+        if (dx < 0) :
+            dx = -1*dx
+            stepx = -1
+        else :
+            stepx = 1
+        x = x0
+        y = y0
+        if(dx>dy) :
+            p = 2*dy - dx
+            incE = 2*dy
+            incNE = 2*(dy-dx)
+            while (x != x1) :
+                x = x + stepx
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    y = y + stepy
+                    p = p + incNE
+                p_new = [x, y]
+                res.append(p_new)
+
+        else :
+            p = 2*dx - dy
+            incE = 2*dx
+            incNE = 2*(dx-dy)
+            while (y != y1) :
+                y = y + stepy
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    x = x + stepx
+                    p = p + incNE
+
+                p_new = [x, y]
+                res.append(p_new)
+        self.moves=res
+        #print res
+        self.i = 0 #debe empezar a recorrerla desde cero
+
+    def update(self): #se mueve
+        if(self.cont == 0):
+            self.cont += 1
+            if(self.i < len(self.moves)):
+                self.rect.x,self.rect.y = self.moves[self.i][0],self.moves[self.i][1]
+                self.i += 1 #para que recorra el siguiente
+        else:
+            if(self.cont >= 5):
+                self.cont = 0
+            else:
+                self.cont += 1
+
 
 class Juego:
     nivel=0
@@ -526,9 +606,10 @@ class Juego:
         ls_bajasj=pygame.sprite.Group()
 
 
-        b = Boss(800/2,600/2)
-        ls_enemigos.add(b)
-        ls_todos.add(b)
+        boss = Boss(800/2,600/2)
+        boss.paredes=ls_muros
+        ls_enemigos.add(boss)
+        ls_todos.add(boss)
 
         jugador = Jugador(500,200)
         jugador.paredes=ls_muros
@@ -632,19 +713,24 @@ class Juego:
                                         cont_llave=1
 
             T=pygame.key.get_pressed()
-
+            boss.restartMovements([jugador.rect.x,jugador.rect.y])
             if T[pygame.K_LEFT]:
                 jugador.update()
                 jugador.ir_izq()
+                #b.restartMovements([jugador.rect.x,jugador.rect.y])
             if T[pygame.K_RIGHT]:
                 jugador.update()
                 jugador.ir_der()
+                #b.restartMovements([jugador.rect.x,jugador.rect.y])
+
             if T[pygame.K_UP]:
                 jugador.update()
                 jugador.ir_arr()
+                #b.restartMovements([jugador.rect.x,jugador.rect.y])
             if T[pygame.K_DOWN]:
                 jugador.update()
                 jugador.ir_abaj()
+                #b.restartMovements([jugador.rect.x,jugador.rect.y])
 
 
             for e in ls_enemigos:
