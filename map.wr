@@ -32,6 +32,7 @@ vy = 2
 muro = si
 bloqueo = si
 puerta = no
+vida=no
 
 [#]
 nombre = piso
@@ -40,6 +41,7 @@ vy = 1
 muro = no
 bloqueo = no
 puerta = no
+vida=no
 
 [-]
 nombre = puerta
@@ -48,6 +50,7 @@ vy = 2
 muro = no
 bloqueo = si
 puerta = si
+vida=no
 
 [?]
 nombre = dinamita
@@ -56,3 +59,4 @@ vy = 2
 muro = no
 bloqueo = si
 puerta = no
+vida=no

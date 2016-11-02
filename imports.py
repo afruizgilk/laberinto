@@ -500,8 +500,8 @@ class Juego:
         self.nivel = nivel
         self.surface = surface
 
-    def start_1(self):
-        global ANCHO,ALTO,jugador,ls_todos,sub
+    def start_1(self, vida_j=100):
+        global ANCHO,ALTO,jugador,ls_todos,sub,tipo
         c_fondo = (255,0,0)
         ALTO = 600
         ANCHO = 800
@@ -523,13 +523,16 @@ class Juego:
         ls_elementos=pygame.sprite.Group()
         ls_DL=pygame.sprite.Group()
         ls_jugador=pygame.sprite.Group()
+        ls_bajasj=pygame.sprite.Group()
 
 
         b = Boss(800/2,600/2)
         ls_enemigos.add(b)
         ls_todos.add(b)
 
-        jugador = Jugador(10,10)
+        jugador = Jugador(500,200)
+        jugador.paredes=ls_muros
+        jugador.vida=vida_j
         ls_jugador.add(jugador)
         ls_todos.add(jugador)
 
@@ -540,8 +543,162 @@ class Juego:
         ls_jugador.draw(pantalla)
 
         pygame.display.flip()
-        while 1:
-            print "jej"
+        pygame.display.flip()
+        reloj = pygame.time.Clock()
+        terminar=False
+        muerto = False
+        win = False
+        flag_sonido=True
+        cont_llave = 0
+        while not terminar:
+            tipo2 = pygame.font.Font("data/fonts/sk.ttf", 90)
+            if(jugador.vida <= 0):
+                #print("Muerto prro")
+                global picture
+                picture = pygame.image.load("data/images/gameover.png")
+                picture = pygame.transform.scale(picture, (ANCHO, ALTO+10))
+                rect = picture.get_rect()
+                #print "VIDA : " , jugador.vida
+                muerto = True
+                update_status_section()
+                sub.fill((0,0,0))
+                tipo.set_bold(True)
+                teclas1 = tipo2.render("Presione ESC para ir al menu" , 1 , (255,0,0))
+                teclas2 = tipo2.render("Presione N para juego nuevo " , 1 , (255,0,0))
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    terminar=True
+                    salir=True
+
+                elif event.type==pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        terminar=True
+                        salir=True
+
+                    if event.key == pygame.K_n:
+                        self.start_0()
+                    if event.key == pygame.K_SPACE:
+                        playsound("data/sounds/shot.ogg")
+                        b = Bullet("data/images/bala.png", jugador.rect.x, jugador.rect.y, jugador.direccion)
+                        ls_bajasj.add(b)
+                        ls_todos.add(b)
+
+                    """if event.key == pygame.K_t:
+                        for i in ls_DL:
+                            jugador.rect.x,jugador.rect.y = i.rect.x, i.rect.y"""
+                    if event.key == pygame.K_e:
+                        for el in ls_DL:
+                            if(checkCollision(jugador,el)):
+                                if(el.tipo == "dinamita"):
+                                    playsound("data/sounds/open.ogg")
+                                    x,y = el.rect.x, el.rect.y
+                                    ls_DL.remove(el)
+                                    ls_todos.remove(el)
+                                    ls_muros.remove(el)
+                                    ls_elementos.remove(el)
+                                    m=Elemento(x,y,"data/images/spritesterreno.png")
+                                    m.image=images[1][1]
+                                    m.rect[2],m.rect[3] = 25,25 #Coreccion a la imagen
+                                    m.tipo="dinamita_a"
+
+                                    ls_todos.add(m)
+                                    ls_muros.add(m)
+
+                                else:
+                                    playsound("data/sounds/open.ogg")
+                                    jugador.llaves+=1
+                                    x,y = el.rect.x, el.rect.y
+                                    ls_DL.remove(el)
+                                    ls_todos.remove(el)
+                                    ls_muros.remove(el)
+                                    ls_elementos.remove(el)
+                                    m=Elemento(x,y,"data/images/spritesterreno.png")
+                                    m.image=images[3][0]
+                                    m.rect[2],m.rect[3] = 25,25 #Coreccion a la imagen
+                                    m.tipo="dinamita"
+
+                                    ls_todos.add(m)
+                                    ls_muros.add(m)
+
+                        for el in ls_elementos:
+                            if(checkCollision(jugador,el)):
+                                if(el.tipo == "puerta"):
+                                    if(jugador.llaves >= 2):
+                                        win=True
+                                    else:
+                                        playsound("data/sounds/er.ogg")
+                                        cont_llave=1
+
+            T=pygame.key.get_pressed()
+
+            if T[pygame.K_LEFT]:
+                jugador.update()
+                jugador.ir_izq()
+            if T[pygame.K_RIGHT]:
+                jugador.update()
+                jugador.ir_der()
+            if T[pygame.K_UP]:
+                jugador.update()
+                jugador.ir_arr()
+            if T[pygame.K_DOWN]:
+                jugador.update()
+                jugador.ir_abaj()
+
+
+            for e in ls_enemigos:
+                if(checkCollision(jugador,e)):
+                    jugador.vida-=random.randrange(15,30)
+
+
+
+            if(muerto and not win):
+                if(flag_sonido):
+                    playsound("data/sounds/go.ogg")
+                    flag_sonido=False
+                rect = rect.move((0,0))
+                pantalla.blit(picture, rect)
+                pantalla.blit(teclas1, [ANCHO/2-210,ALTO/2+100])
+                pantalla.blit(teclas2, [ANCHO/2-220,ALTO/2+200])
+            else:
+                if(not win):
+                    pantalla.fill(c_fondo)
+                    sub.fill ((0,0,0))
+                    ls_todos.draw(pantalla)
+                    ls_bajasj.draw(pantalla)
+                    ls_enemigos.draw(pantalla)
+                    ls_jugador.draw(pantalla)
+                    ls_enemigos.update()
+                    #ls_balas_e.draw(pantalla)
+                    ls_todos.update()
+
+                    update_status_section()
+                else:
+                    global picturewin
+                    if(flag_sonido):
+                        playsound("data/sounds/win.ogg")
+                        flag_sonido=False
+                    picturewin = pygame.image.load("data/images/win.png")
+                    picturewin = pygame.transform.scale(picturewin, (ANCHO, ALTO+10))
+                    win = True
+                    sub.fill((0,0,0))
+                    pantalla.blit(picturewin, [0,0])
+                    teclas1 = tipo2.render("Fin del juego" , 1 , (255,0,0))
+                    #teclas2 = tipo2.render("Presione N para juego nuevo " , 1 , (255,0,0))
+                    pantalla.blit(teclas1, [ANCHO/2-180,ALTO/2+100])
+                    #pantalla.blit(teclas2, [ANCHO/2-220,ALTO/2+200])
+
+
+            if(not cont_llave == 0 and not win):
+                pantalla.blit(rq_llave, [ANCHO/2-200,ALTO/2-100])
+                pic = pygame.image.load("data/images/key2.png")
+                pic = pygame.transform.scale(pic, (50,50))
+                pantalla.blit(pic, [ANCHO/2+140, ALTO/2-60])
+                cont_llave+=1
+
+            pygame.display.flip()
+
     def start_0(self):
         global ANCHO,ALTO,jugador,pantalla,sub,tipo,ls_todos
         c_fondo = (255,0,0)
