@@ -951,6 +951,8 @@ class Juego:
                 elif event.type==pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         terminar=True
+                        salir=True
+            pygame.display.flip()
 
     def pantalla_inicial(self):
         ALTO = 600
@@ -990,7 +992,7 @@ class Juego:
                     if event.key == pygame.K_ESCAPE:
                         terminar=True
                     if event.key == pygame.K_RETURN:
-                        self.start_0()
+                        self.start_1()
 
     def start_1(self, vida_j=100):
         global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos
@@ -1046,6 +1048,13 @@ class Juego:
         flag_sonido=True
         cont_llave = 0
         while not terminar:
+            if(len(ls_enemigos) <= 0):
+                terminar=True
+                salir=True
+                pantalla.fill(c_fondo)
+                pygame.display.flip()
+                self.pantalla_final()
+
             tipo2 = pygame.font.Font("data/fonts/sk.ttf", 90)
             if(jugador.vida <= 0):
                 #print("Muerto prro")
@@ -1134,7 +1143,7 @@ class Juego:
                         ls_todos.remove(e)
 
                     if(checkCollision(b,e)):
-                        e.vida -= 20
+                        e.vida -= random.randrange(30,40)
                         ls_bajasj.remove(b)
                         ls_todos.remove(b)
                 for b_e in ls_balas_boss:
@@ -1170,11 +1179,6 @@ class Juego:
                 jugador.update()
                 jugador.ir_abaj()
 
-
-            if(len(ls_enemigos) <= 0):
-                terminar=True
-                self.pantalla_final()
-
             for e in ls_enemigos:
                 if(checkCollision(jugador,e)):
                     jugador.vida-=random.randrange(15,30)
@@ -1188,6 +1192,7 @@ class Juego:
                     playsound("data/sounds/go.ogg")
                     flag_sonido=False
                 rect = rect.move((0,0))
+                pantalla.fill(c_fondo)
                 pantalla.blit(picture, rect)
                 pantalla.blit(teclas1, [ANCHO/2-210,ALTO/2+100])
                 pantalla.blit(teclas2, [ANCHO/2-220,ALTO/2+200])
@@ -1212,6 +1217,7 @@ class Juego:
                         playsound("data/sounds/win.ogg")
                         flag_sonido=False
                     picturewin = pygame.image.load("data/images/win.png")
+                    pantalla.fill(c_fondo)
                     picturewin = pygame.transform.scale(picturewin, (ANCHO, ALTO+10))
                     win = True
                     sub.fill((0,0,0))
@@ -1223,6 +1229,7 @@ class Juego:
 
 
             if(not cont_llave == 0 and not win):
+                pantalla.fill(c_fondo)
                 pantalla.blit(rq_llave, [ANCHO/2-200,ALTO/2-100])
                 pic = pygame.image.load("data/images/key2.png")
                 pic = pygame.transform.scale(pic, (50,50))
@@ -1230,6 +1237,12 @@ class Juego:
                 cont_llave+=1
 
             pygame.display.flip()
+            if(len(ls_enemigos) <= 0):
+                terminar=True
+                salir=True
+                pantalla.fill(c_fondo)
+                pygame.display.flip()
+                self.pantalla_final()
 
     def start_0(self):
         global ANCHO,ALTO,jugador,pantalla,sub,tipo,ls_todos
@@ -1302,6 +1315,7 @@ class Juego:
         win = False
         flag_sonido=True
         cont_llave = 0
+
         while not terminar:
 
             #jugador.vida = 100
@@ -1476,8 +1490,9 @@ class Juego:
                     win = True
                     sub.fill((0,0,0))
                     pantalla.blit(picturewin, [0,0])
-
-                    self.start_1()
+                    terminar=True
+                    salir=True
+                    self.start_1(jugador.vida)
                     #teclas1 = tipo2.render("Presione ESC para salir" , 1 , (255,0,0))
                     #teclas2 = tipo2.render("Presione N para juego nuevo " , 1 , (255,0,0))
                     #pantalla.blit(teclas1, [ANCHO/2-180,ALTO/2+100])
