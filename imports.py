@@ -429,7 +429,6 @@ class Jugador(pygame.sprite.Sprite):
         self.vel_x = 0
 
     def update(self):
-
         ls_choque=pygame.sprite.spritecollide(self, self.paredes, False)
         for muro in ls_choque:
             if(muro.tipo == "pared" or muro.tipo == "d_dinamita"):
@@ -444,8 +443,8 @@ class Jugador(pygame.sprite.Sprite):
                         else:
                             if self.direccion == "abajo":
                                 self.rect.bottom=muro.rect.top
-
 class Bullet(pygame.sprite.Sprite): #Hereda de la clase sprite
+
     def __init__(self, img_name, x,y, direccion): #img para cargar, y su padre(de donde debe salir la bala)
     	pygame.sprite.Sprite.__init__(self)
     	self.image = pygame.image.load(img_name).convert_alpha()
@@ -454,8 +453,8 @@ class Bullet(pygame.sprite.Sprite): #Hereda de la clase sprite
     	self.rect.y = y
         self.speed = 1
         self.direccion = direccion
-
     def update(self):
+
         if(self.direccion == "derecha"): #derecha
             self.rect.x += self.speed
         if(self.direccion == "izquierda"):#izquierda
@@ -465,7 +464,8 @@ class Bullet(pygame.sprite.Sprite): #Hereda de la clase sprite
         if(self.direccion == "abajo"):#abajo
             self.rect.y += self.speed
 
-class Boss(pygame.sprite.Sprite):
+class Bullet_boss(pygame.sprite.Sprite):
+
     paredes=None
     elementos=None
     image_arriba = []
@@ -473,40 +473,27 @@ class Boss(pygame.sprite.Sprite):
     image_derecha = []
     image_izquierda=[]
     moves=[]
-    def __init__(self, x,y):
-        pygame.sprite.Sprite.__init__(self)
-
-        matrizimg = cargar_fondo("data/images/boss.png", 32,32)
-        """for i in range(7,8):
-            self.image_abajo.append(matrizimg[i][0])
-        for i in range(7,8):
-            self.image_izquierda.append(matrizimg[i][1])
-        for i in range(7,8):
-            self.image_derecha.append(matrizimg[i][2])
-        for i in range(7,8):
-            self.image_arriba.append(matrizimg[i][3])"""
-        self.probabilidad = random.randrange(0,100)
-        self.incremento = 1
-        self.image = cargar_fondo("data/images/boss.png", 32,32)[0][0]
-        self.rect = self.image.get_rect()
-        self.rect.x=x
-        self.rect.y=y
-        self.life = 1000
-        self.speed = 5
-        self.i=0
-        self.reloj = pygame.time.Clock()
+    i=0
+    i2=0
+    def __init__(self, x,y, pos_p): #img para cargar, y su padre(de donde debe salir la bala)
+    	pygame.sprite.Sprite.__init__(self)
+    	self.matrizimg = cargar_fondo("data/images/shot_boss.png", 61,63)
+        for i in range(2):
+            self.image_abajo.append(self.matrizimg[i][0])
+        for i in range(2):
+            self.image_izquierda.append(self.matrizimg[i][1])
+        for i in range(2):
+            self.image_derecha.append(self.matrizimg[i][2])
+        for i in range(2):
+            self.image_arriba.append(self.matrizimg[i][3])
+        self.image = self.image_izquierda[1]
+    	self.rect = self.image.get_rect()
+    	self.rect.x = x
+    	self.rect.y = y
+        self.speed = 1
         self.cont = 0
-    def getLife(self):
-    	return self.life
 
-    def setLife(self,life):
-    	self.life = life
-
-    def getSpeed(self):
-        return self.speed
-
-    def restartMovements(self,pos):#calcula el camino por donde debe moverse (recibe el punto final)
-
+    def go(self,pos):
         p = [[self.rect.x,self.rect.y],pos]
         x0 = p[0][0]
         y0 = p[0][1]
@@ -540,7 +527,6 @@ class Boss(pygame.sprite.Sprite):
                     p = p + incNE
                 p_new = [x, y]
                 res.append(p_new)
-
         else :
             p = 2*dx - dy
             incE = 2*dx
@@ -556,10 +542,138 @@ class Boss(pygame.sprite.Sprite):
                 p_new = [x, y]
                 res.append(p_new)
         self.moves=res
-        #print res
-        self.i = 0 #debe empezar a recorrerla desde cero
+        self.i = 0
+
+    def update(self):
+
+        if(self.cont == 0):
+            self.cont += 1
+            if(self.i2 <= 1):
+                self.image = self.matrizimg[random.randrange(0,2)][random.randrange(0,4)]
+                self.i2+=1
+                if(self.i < len(self.moves)):
+                    self.rect.x,self.rect.y = self.moves[self.i][0],self.moves[self.i][1]
+                    self.i += 1 #para que recorra el siguiente
+                else:
+                    ls_balas_boss.remove(self)
+                    ls_todos.remove(self)
+            else:
+                self.i2=0
+
+
+        else:
+            if(self.cont >= 26):
+                self.cont = 0
+            else:
+                self.cont += 1
+
+
+
+
+
+class Boss(pygame.sprite.Sprite):
+
+    paredes=None
+    elementos=None
+    image_arriba = []
+    image_abajo =  []
+    image_derecha = []
+    image_izquierda=[]
+    moves=[]
+    shot=False
+
+    def __init__(self, x,y):
+
+        pygame.sprite.Sprite.__init__(self)
+        matrizimg = cargar_fondo("data/images/boss.png", 32,32)
+        """for i in range(7,8):
+            self.image_abajo.append(matrizimg[i][0])
+        for i in range(7,8):
+            self.image_izquierda.append(matrizimg[i][1])
+        for i in range(7,8):
+            self.image_derecha.append(matrizimg[i][2])
+        for i in range(7,8):
+            self.image_arriba.append(matrizimg[i][3])"""
+        self.probabilidad = random.randrange(0,100)
+        self.incremento = 1
+        self.image = cargar_fondo("data/images/boss.png", 32,32)[0][0]
+        self.rect = self.image.get_rect()
+        self.rect.x=x
+        self.rect.y=y
+        self.life = 1000
+        self.speed = 5
+        self.i=0
+        self.reloj = pygame.time.Clock()
+        self.cont = 0
+
+    def getLife(self):
+    	return self.life
+
+    def setLife(self,life):
+    	self.life = life
+
+    def getSpeed(self):
+        return self.speed
+
+    def restartMovements(self,pos):
+        p = [[self.rect.x,self.rect.y],pos]
+        x0 = p[0][0]
+        y0 = p[0][1]
+        x1 = p[1][0]
+        y1 = p[1][1]
+        res = []
+        dx = (x1 - x0)
+        dy = (y1 - y0)
+        if (dy < 0) :
+            dy = -1*dy
+            stepy = -1
+        else :
+            stepy = 1
+        if (dx < 0) :
+            dx = -1*dx
+            stepx = -1
+        else :
+            stepx = 1
+        x = x0
+        y = y0
+        if(dx>dy) :
+            p = 2*dy - dx
+            incE = 2*dy
+            incNE = 2*(dy-dx)
+            while (x != x1) :
+                x = x + stepx
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    y = y + stepy
+                    p = p + incNE
+                p_new = [x, y]
+                res.append(p_new)
+        else :
+            p = 2*dx - dy
+            incE = 2*dx
+            incNE = 2*(dx-dy)
+            while (y != y1) :
+                y = y + stepy
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    x = x + stepx
+                    p = p + incNE
+
+                p_new = [x, y]
+                res.append(p_new)
+        self.moves=res
+        self.i = 0
 
     def update(self): #se mueve
+        if(not self.shot):
+            s = Bullet_boss(self.rect.x,self.rect.y,0)
+            s.go([jugador.rect.x,jugador.rect.y])
+            ls_balas_boss.add(s)
+            ls_todos.add(s)
+            self.shot=True
+
         if(self.cont == 0):
             self.cont += 1
             if(self.i < len(self.moves)):
@@ -571,7 +685,6 @@ class Boss(pygame.sprite.Sprite):
             else:
                 self.cont += 1
 
-
 class Juego:
     nivel=0
     surface=None
@@ -581,7 +694,7 @@ class Juego:
         self.surface = surface
 
     def start_1(self, vida_j=100):
-        global ANCHO,ALTO,jugador,ls_todos,sub,tipo
+        global ANCHO,ALTO,jugador,ls_todos,sub,tipo,ls_balas_boss
         c_fondo = (255,0,0)
         ALTO = 600
         ANCHO = 800
@@ -604,12 +717,17 @@ class Juego:
         ls_DL=pygame.sprite.Group()
         ls_jugador=pygame.sprite.Group()
         ls_bajasj=pygame.sprite.Group()
+        ls_balas_boss = pygame.sprite.Group()
 
 
         boss = Boss(800/2,600/2)
         boss.paredes=ls_muros
         ls_enemigos.add(boss)
         ls_todos.add(boss)
+
+        """jl = Bullet_boss(100,100,[100,100])
+        ls_balas_boss.add(jl)
+        ls_todos.add(jl)"""
 
         jugador = Jugador(500,200)
         jugador.paredes=ls_muros
@@ -632,6 +750,7 @@ class Juego:
         flag_sonido=True
         cont_llave = 0
         while not terminar:
+            jugador.vida=100
             tipo2 = pygame.font.Font("data/fonts/sk.ttf", 90)
             if(jugador.vida <= 0):
                 #print("Muerto prro")
@@ -717,20 +836,19 @@ class Juego:
             if T[pygame.K_LEFT]:
                 jugador.update()
                 jugador.ir_izq()
-                #b.restartMovements([jugador.rect.x,jugador.rect.y])
+
             if T[pygame.K_RIGHT]:
                 jugador.update()
                 jugador.ir_der()
-                #b.restartMovements([jugador.rect.x,jugador.rect.y])
 
             if T[pygame.K_UP]:
                 jugador.update()
                 jugador.ir_arr()
-                #b.restartMovements([jugador.rect.x,jugador.rect.y])
+
             if T[pygame.K_DOWN]:
                 jugador.update()
                 jugador.ir_abaj()
-                #b.restartMovements([jugador.rect.x,jugador.rect.y])
+
 
 
             for e in ls_enemigos:
@@ -753,9 +871,11 @@ class Juego:
                     sub.fill ((0,0,0))
                     ls_todos.draw(pantalla)
                     ls_bajasj.draw(pantalla)
+                    ls_balas_boss.draw(pantalla)
                     ls_enemigos.draw(pantalla)
                     ls_jugador.draw(pantalla)
                     ls_enemigos.update()
+                    ls_balas_boss.update()
                     #ls_balas_e.draw(pantalla)
                     ls_todos.update()
 
