@@ -626,6 +626,10 @@ class Bullet_boss(pygame.sprite.Sprite):
                     ls_balas_boss.remove(self)
                     ls_todos.remove(self)
                     explosionb(self.rect.x,self.rect.y, True)
+                    lc = lacayo(self.rect.x, self.rect.y)
+                    lc.paredes = ls_muros
+                    ls_enemigos.add(lc)
+                    ls_todos.add(lc)
                     self.explosion=False
         if(checkCollision(jugador,self)):
             if(self.explosion):
@@ -633,6 +637,10 @@ class Bullet_boss(pygame.sprite.Sprite):
                 ls_balas_boss.remove(self)
                 ls_todos.remove(self)
                 explosionb(self.rect.x,self.rect.y, True)
+                lc = lacayo(self.rect.x, self.rect.y)
+                lc.paredes = ls_muros
+                ls_enemigos.add(lc)
+                ls_todos.add(lc)
         if(self.cont == 0):
             self.cont += 1
             if(self.i2 <= 1):
@@ -647,6 +655,10 @@ class Bullet_boss(pygame.sprite.Sprite):
                     """explo = Explosion(self.rect.x,self.rect.y)
                     ls_todos.add(explo)"""
                     explosionb(self.rect.x,self.rect.y, True)
+                    lc = lacayo(self.rect.x, self.rect.y)
+                    lc.paredes = ls_muros
+                    ls_enemigos.add(lc)
+                    ls_todos.add(lc)
             else:
                 self.i2=0
 
@@ -656,6 +668,124 @@ class Bullet_boss(pygame.sprite.Sprite):
                 self.cont = 0
             else:
                 self.cont += 1
+
+class lacayo(pygame.sprite.Sprite):
+    paredes=None
+    elementos=None
+    image_arriba = []
+    image_abajo =  []
+    image_derecha = []
+    image_izquierda=[]
+    moves=[]
+    def __init__(self, x,y):
+        pygame.sprite.Sprite.__init__(self)
+        self.probabilidad = random.randrange(0,100)
+        self.incremento = 1
+        self.image = cargar_fondo("data/images/spritesene.png", 21,21)[0][4]
+        self.rect = self.image.get_rect()
+        self.rect.x=x
+        self.rect.y=y
+        self.vida = 100
+        self.speed = 5
+        self.i=0
+        self.reloj = pygame.time.Clock()
+        self.cont = 0
+
+    def restartMovements(self,pos):
+        p = [[self.rect.x,self.rect.y],pos]
+        x0 = p[0][0]
+        y0 = p[0][1]
+        x1 = p[1][0]
+        y1 = p[1][1]
+        res = []
+        dx = (x1 - x0)
+        dy = (y1 - y0)
+        if (dy < 0) :
+            dy = -1*dy
+            stepy = -1
+        else :
+            stepy = 1
+        if (dx < 0) :
+            dx = -1*dx
+            stepx = -1
+        else :
+            stepx = 1
+        x = x0
+        y = y0
+        if(dx>dy) :
+            p = 2*dy - dx
+            incE = 2*dy
+            incNE = 2*(dy-dx)
+            while (x != x1) :
+                x = x + stepx
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    y = y + stepy
+                    p = p + incNE
+                p_new = [x, y]
+                res.append(p_new)
+        else :
+            p = 2*dx - dy
+            incE = 2*dx
+            incNE = 2*(dx-dy)
+            while (y != y1) :
+                y = y + stepy
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    x = x + stepx
+                    p = p + incNE
+
+                p_new = [x, y]
+                res.append(p_new)
+        self.moves=res
+        self.i = 0
+
+    def update(self):
+        if(self.cont == 0):
+            self.cont += 1
+            if(self.i < len(self.moves)):
+                self.rect.x,self.rect.y = self.moves[self.i][0],self.moves[self.i][1]
+                self.i += 1 #para que recorra el siguiente
+        else:
+            if(self.cont >= 5):
+                self.cont = 0
+            else:
+                self.cont += 1
+
+
+class Portal(pygame.sprite.Sprite):
+
+    def __init__(self, x,y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = cargar_fondo("data/images/portal.png", 32,32)[0][0]
+        self.rect = self.image.get_rect()
+        self.rect.x=x
+        self.rect.y=y
+        self.cont = 0
+        self.ite = 0
+        self.tipo = "portal"
+
+    def update(self):
+        if(self.ite <= 8):
+            if(self.cont == 0):
+                self.cont += 1
+                lc = lacayo(self.rect.x+random.randrange(10,30),self.rect.y)
+                lc.paredes=ls_muros
+                lc.restartMovements([jugador.rect.x,jugador.rect.y])
+                ls_enemigos.add(lc)
+                ls_todos.add(lc)
+                self.ite += 1
+            else:
+                if(self.cont >= 9999999):
+                    self.cont = 0
+                else:
+                    self.cont += 1
+        else:
+            ls_elementos.remove(self)
+            ls_todos.remove(self)
+
 
 class Boss(pygame.sprite.Sprite):
 
@@ -687,7 +817,7 @@ class Boss(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x=x
         self.rect.y=y
-        self.vida = 1000
+        self.vida = 500
         self.speed = 5
         self.i=0
         self.reloj = pygame.time.Clock()
@@ -777,6 +907,7 @@ class Boss(pygame.sprite.Sprite):
                 else:
                     self.cont += 1
 
+
 class Juego:
     nivel=0
     surface=None
@@ -785,8 +916,84 @@ class Juego:
         self.nivel = nivel
         self.surface = surface
 
+    def pantalla_final(self):
+        ALTO = 600
+        ANCHO = 800
+        pygame.init()
+        pantalla = pygame.display.set_mode((ANCHO, ALTO+30))
+        pygame.display.set_caption(" El laberinto de la muerte lvl 2 - [v1] ", 'Spine Runtime')
+        pantalla.fill((0,0,0))
+        font_path = 'data/fonts/coders_crux.ttf'
+        font = pygame.font.Font
+        tipo = pygame.font.Font(font_path, 50)
+        text = tipo.render("La paz vuelve al reino , y apesar de " , 1 , (255,0,0))
+        text1 = tipo.render("tantas muertes el rey joe queda como", 1 , (255,0,0))
+        text2 = tipo.render("el lider definitivo de la comunidad", 1 , (255,0,0))
+        text3 = tipo.render("chiru por su valentia y sus temibles", 1 , (255,0,0))
+        text4 = tipo.render("proeza, gracias por tu batalla !", 1 , (255,0,0))
+        img = pygame.image.load("data/images/end.png")
+        img = pygame.transform.scale(img, (ANCHO, 360))
+        text5 = tipo.render("Presiona ESC para volver al menu", 1 , (255,255,255))
+        pantalla.blit(text, (10,10))
+        pantalla.blit(text1, (10,50))
+        pantalla.blit(text2, (10,90))
+        pantalla.blit(text3, (10,130))
+        pantalla.blit(text4, (10,170))
+        pantalla.blit(img, (10,220))
+        pantalla.blit(text5, (70,ALTO-10))
+        pygame.display.flip()
+        terminar = False
+        while not terminar:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminar=True
+                    salir=True
+                elif event.type==pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        terminar=True
+
+    def pantalla_inicial(self):
+        ALTO = 600
+        ANCHO = 800
+        pygame.init()
+        pantalla = pygame.display.set_mode((ANCHO, ALTO+30))
+        pygame.display.set_caption(" El laberinto de la muerte lvl 2 - [v1] ", 'Spine Runtime')
+        pantalla.fill((0,0,0))
+        font_path = 'data/fonts/coders_crux.ttf'
+        font = pygame.font.Font
+        tipo = pygame.font.Font(font_path, 50)
+        text = tipo.render("Un pueblo conocido con el nombre de " , 1 , (255,0,0))
+        text1 = tipo.render("chiru ha sido asotado por un poder ", 1 , (255,0,0))
+        text2 = tipo.render("maligno que ha acabado con muchas vidas", 1 , (255,0,0))
+        text3 = tipo.render("un joven principe proximo a ser rey a ", 1 , (255,0,0))
+        text4 = tipo.render("decido enfrentarlo y asesinarlo,", 1 , (255,0,0))
+        text5 = tipo.render("esta en tus manos ayudarlo en su camino", 1 , (255,0,0))
+        img = pygame.image.load("data/images/init.jpg")
+        img = pygame.transform.scale(img, (ANCHO, 360))
+        text5 = tipo.render("Presiona ENTER para continuar !", 1 , (255,255,255))
+        pantalla.blit(text, (10,10))
+        pantalla.blit(text1, (10,50))
+        pantalla.blit(text2, (10,90))
+        pantalla.blit(text3, (10,130))
+        pantalla.blit(text4, (10,170))
+        pantalla.blit(text4, (10,220))
+        pantalla.blit(img, (10,260))
+        pantalla.blit(text5, (70,ALTO-10))
+        pygame.display.flip()
+        terminar = False
+        while not terminar:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminar=True
+                    salir=True
+                elif event.type==pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        terminar=True
+                    if event.key == pygame.K_RETURN:
+                        self.start_0()
+
     def start_1(self, vida_j=100):
-        global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros
+        global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos
         c_fondo = (255,0,0)
         ALTO = 600
         ANCHO = 800
@@ -823,6 +1030,7 @@ class Juego:
         ls_jugador.add(jugador)
         ls_todos.add(jugador)
 
+
         m = dibujarmapa("map1.wr",ls_todos,ls_muros,ls_elementos,ls_DL)
 
         ls_todos.draw(pantalla)
@@ -838,7 +1046,6 @@ class Juego:
         flag_sonido=True
         cont_llave = 0
         while not terminar:
-            jugador.vida=100
             tipo2 = pygame.font.Font("data/fonts/sk.ttf", 90)
             if(jugador.vida <= 0):
                 #print("Muerto prro")
@@ -866,16 +1073,13 @@ class Juego:
                         salir=True
 
                     if event.key == pygame.K_n:
-                        self.start_0()
+                        self.pantalla_inicial()
                     if event.key == pygame.K_SPACE:
                         playsound("data/sounds/shot.ogg")
                         b = Bullet("data/images/bala.png", jugador.rect.x, jugador.rect.y, jugador.direccion)
                         ls_bajasj.add(b)
                         ls_todos.add(b)
 
-                    """if event.key == pygame.K_t:
-                        for i in ls_DL:
-                            jugador.rect.x,jugador.rect.y = i.rect.x, i.rect.y"""
                     if event.key == pygame.K_e:
                         for el in ls_DL:
                             if(checkCollision(jugador,el)):
@@ -947,7 +1151,9 @@ class Juego:
 
 
             T=pygame.key.get_pressed()
-            boss.restartMovements([jugador.rect.x,jugador.rect.y])
+            for e in ls_enemigos:
+                e.restartMovements([jugador.rect.x,jugador.rect.y])
+
             if T[pygame.K_LEFT]:
                 jugador.update()
                 jugador.ir_izq()
@@ -965,11 +1171,16 @@ class Juego:
                 jugador.ir_abaj()
 
 
+            if(len(ls_enemigos) <= 0):
+                terminar=True
+                self.pantalla_final()
 
             for e in ls_enemigos:
                 if(checkCollision(jugador,e)):
                     jugador.vida-=random.randrange(15,30)
-
+                if(e.vida <= 0):
+                    ls_elementos.remove(e)
+                    ls_todos.remove(e)
 
 
             if(muerto and not win):

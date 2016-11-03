@@ -23,7 +23,7 @@ def start():
     m.draw_menu()
 
     pygame.display.update()
-    game = Juego(1,pantalla)
+    game = Juego(0,pantalla)
     while 1:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -46,7 +46,7 @@ def start():
                     if m.cursor == 2:#here is the Menu class function
                         sys.exit(0)
                     if m.cursor == 0:
-                        game.Iniciar_j()
+                        game.pantalla_inicial()
                     if m.cursor == 1:
                         print("Menu help")
                 pantalla.fill((51,51,51))
