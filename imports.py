@@ -541,7 +541,6 @@ class Bullet(pygame.sprite.Sprite): #Hereda de la clase sprite
             self.rect.y += self.speed
 
 class Bullet_boss(pygame.sprite.Sprite):
-
     paredes=None
     elementos=None
     image_arriba = []
@@ -658,10 +657,6 @@ class Bullet_boss(pygame.sprite.Sprite):
             else:
                 self.cont += 1
 
-
-
-
-
 class Boss(pygame.sprite.Sprite):
 
     paredes=None
@@ -692,7 +687,7 @@ class Boss(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x=x
         self.rect.y=y
-        self.life = 1000
+        self.vida = 1000
         self.speed = 5
         self.i=0
         self.reloj = pygame.time.Clock()
@@ -923,6 +918,33 @@ class Juego:
                                     else:
                                         playsound("data/sounds/er.ogg")
                                         cont_llave=1
+
+            for b in ls_bajasj:
+                for m in ls_muros:
+                    if(checkCollision(b,m)):
+                        ls_bajasj.remove(b)
+                        ls_todos.remove(b)
+                for e in ls_enemigos:
+                    if(e.vida <= 0):
+                        ls_enemigos.remove(e)
+                        ls_todos.remove(e)
+
+                    if(checkCollision(b,e)):
+                        e.vida -= 20
+                        ls_bajasj.remove(b)
+                        ls_todos.remove(b)
+                for b_e in ls_balas_boss:
+                    if(checkCollision(b,b_e)):
+                        ls_bajasj.remove(b)
+                        ls_todos.remove(b)
+
+            for c in ls_elementos:
+                if(c.tipo == "vida"):
+                    if(checkCollision(jugador,c)):
+                        jugador.vida+=40
+                        c.tipo = "piso"
+                        c.image=images[0][1]
+
 
             T=pygame.key.get_pressed()
             boss.restartMovements([jugador.rect.x,jugador.rect.y])
