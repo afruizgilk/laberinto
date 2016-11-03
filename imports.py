@@ -15,8 +15,11 @@ def checkCollision(sprite1, sprite2):
     else:
         return False
 
-def cargar_fondo(archivo, ancho, alto):
-    imagen = pygame.image.load(archivo).convert_alpha()
+def cargar_fondo(archivo, ancho, alto, sin_canal=False):
+    if(not sin_canal):
+        imagen = pygame.image.load(archivo).convert_alpha()
+    else:
+        imagen = pygame.image.load(archivo)
     imagen_ancho, imagen_alto = imagen.get_size()
     tabla_fondos = []
     for fondo_x in range(0, imagen_ancho/ancho):
@@ -35,26 +38,99 @@ def playsound(filez):
 """def blitcollition(sprite , x,y,image):
     if(jugador.rect.x <= x-image[0]) or (jugador.rect.x )"""
 
-def explosionb(x,y):
-    reloj=pygame.time.Clock()
-    playsound('data/sounds/explosion.ogg')
-    b = cargar_fondo("data/images/ex.png", 115, 105)
-    for actual in xrange(6):
-        pantalla.blit(b[actual][0], (x-50,y-50))
-        rect = b[actual][0].get_rect()
-        rect.x,rect.y = x,y
-        update_status_section()
-        if(rect.colliderect(jugador.rect)):
-            if(jugador.vida > 0):
-                jugador.vida -= 20
-            else:
-                jugador.vida = 0
-        update_status_section()
+def explosionb(x,y, defs=False):
+    if(not defs):
+        reloj=pygame.time.Clock()
+        playsound('data/sounds/explosion.ogg')
+        b = cargar_fondo("data/images/ex.png", 115, 105)
+        for actual in xrange(6):
+            pantalla.blit(b[actual][0], (x-50,y-50))
+            rect = b[actual][0].get_rect()
+            rect.x,rect.y = x,y
+            update_status_section()
+            if(rect.colliderect(jugador.rect)):
+                if(jugador.vida > 0):
+                    jugador.vida -= 20
+                else:
+                    jugador.vida = 0
+            update_status_section()
 
-        #print jugador.rect , rect , "x: " , x, " y: ", y
-        pygame.display.flip()
-        reloj.tick(10)
-    return True
+            #print jugador.rect , rect , "x: " , x, " y: ", y
+            pygame.display.flip()
+            reloj.tick(10)
+        return True
+    else:
+        i = 0
+        playsound('data/sounds/explosion.ogg')
+        b = cargar_fondo("data/images/ex.png", 115, 105)
+        actual = 0
+        while actual <= 6:
+            if(i == 0):
+                i+=1
+                pantalla.blit(b[actual][0], (x-20,y-20))
+                rect = b[actual][0].get_rect()
+                rect.x,rect.y = x,y
+                update_status_section()
+                if(rect.colliderect(jugador.rect)):
+                    if(jugador.vida > 0):
+                        jugador.vida -= 20
+                    else:
+                        jugador.vida = 0
+                """for e in ls_todos:
+                    if(rect.colliderect(e.rect)):
+                        e.tipo = "el_muerto"
+                        e.image=images[2][0]"""
+                update_status_section()
+                pygame.display.flip()
+                actual+=1
+            else:
+                if(i >= 900000):
+                    i= -500
+                else:
+                    i+= 1
+        return True
+
+"""class Explosion(pygame.sprite.Sprite):
+    b = cargar_fondo("data/images/ex.png", 115, 105, True)
+    def __init__(self, x,y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = self.b[0][0]
+        self.rect = self.image.get_rect()
+        self.rect.x = x-20
+        self.rect.y = y-20
+        self.i = 0
+        self.plays = True
+        self.cont = 0
+    def play(self):
+        playsound('data/sounds/explosion.ogg')
+    def update(self):
+        if(self.plays):
+            self.play()
+            self.plays=False
+
+        if(self.cont == 0):
+            self.cont+=1
+            if(self.i<=6):
+                self.i+=1
+            else:
+                ls_todos.remove(self)
+            self.image=self.b[self.i][0]
+            if(checkCollision(jugador,self)):
+                if(jugador.vida > 0):
+                    jugador.vida -= 20
+                else:
+                    jugador.vida = 0
+            update_status_section()
+            ls_elementos.draw(pantalla)
+            pygame.display.flip()
+        else:
+            if(self.cont >= 999999):
+                self.cont =0
+            else:
+                self.cont+=1"""
+
+
+
 
 class Enemigo(pygame.sprite.Sprite):
     paredes=None
@@ -492,6 +568,7 @@ class Bullet_boss(pygame.sprite.Sprite):
     	self.rect.y = y
         self.speed = 1
         self.cont = 0
+        self.explosion = True
 
     def go(self,pos):
         p = [[self.rect.x,self.rect.y],pos]
@@ -543,9 +620,20 @@ class Bullet_boss(pygame.sprite.Sprite):
                 res.append(p_new)
         self.moves=res
         self.i = 0
-
     def update(self):
-
+        for e in ls_muros:
+            if(checkCollision(e,self)):
+                if(self.explosion):
+                    ls_balas_boss.remove(self)
+                    ls_todos.remove(self)
+                    explosionb(self.rect.x,self.rect.y, True)
+                    self.explosion=False
+        if(checkCollision(jugador,self)):
+            if(self.explosion):
+                jugador.vida -= random.randrange(40,80)
+                ls_balas_boss.remove(self)
+                ls_todos.remove(self)
+                explosionb(self.rect.x,self.rect.y, True)
         if(self.cont == 0):
             self.cont += 1
             if(self.i2 <= 1):
@@ -557,12 +645,15 @@ class Bullet_boss(pygame.sprite.Sprite):
                 else:
                     ls_balas_boss.remove(self)
                     ls_todos.remove(self)
+                    """explo = Explosion(self.rect.x,self.rect.y)
+                    ls_todos.add(explo)"""
+                    explosionb(self.rect.x,self.rect.y, True)
             else:
                 self.i2=0
 
 
         else:
-            if(self.cont >= 26):
+            if(self.cont >= 15):
                 self.cont = 0
             else:
                 self.cont += 1
@@ -581,7 +672,8 @@ class Boss(pygame.sprite.Sprite):
     image_izquierda=[]
     moves=[]
     shot=False
-
+    probabilidad=random.randrange(0,100)
+    probabilidad1=random.randrange(0,100)
     def __init__(self, x,y):
 
         pygame.sprite.Sprite.__init__(self)
@@ -608,6 +700,10 @@ class Boss(pygame.sprite.Sprite):
 
     def getLife(self):
     	return self.life
+
+    def update_prob(self):
+        self.probabilidad=random.randrange(0,100)
+        self.probabilidad1=random.randrange(0,100)
 
     def setLife(self,life):
     	self.life = life
@@ -667,23 +763,24 @@ class Boss(pygame.sprite.Sprite):
         self.i = 0
 
     def update(self): #se mueve
-        if(not self.shot):
+        self.update_prob()
+        if(self.probabilidad < 3 and self.probabilidad1 > 98):
             s = Bullet_boss(self.rect.x,self.rect.y,0)
             s.go([jugador.rect.x,jugador.rect.y])
             ls_balas_boss.add(s)
             ls_todos.add(s)
             self.shot=True
-
-        if(self.cont == 0):
-            self.cont += 1
-            if(self.i < len(self.moves)):
-                self.rect.x,self.rect.y = self.moves[self.i][0],self.moves[self.i][1]
-                self.i += 1 #para que recorra el siguiente
         else:
-            if(self.cont >= 5):
-                self.cont = 0
-            else:
+            if(self.cont == 0):
                 self.cont += 1
+                if(self.i < len(self.moves)):
+                    self.rect.x,self.rect.y = self.moves[self.i][0],self.moves[self.i][1]
+                    self.i += 1 #para que recorra el siguiente
+            else:
+                if(self.cont >= 5):
+                    self.cont = 0
+                else:
+                    self.cont += 1
 
 class Juego:
     nivel=0
@@ -694,7 +791,7 @@ class Juego:
         self.surface = surface
 
     def start_1(self, vida_j=100):
-        global ANCHO,ALTO,jugador,ls_todos,sub,tipo,ls_balas_boss
+        global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros
         c_fondo = (255,0,0)
         ALTO = 600
         ANCHO = 800
@@ -724,10 +821,6 @@ class Juego:
         boss.paredes=ls_muros
         ls_enemigos.add(boss)
         ls_todos.add(boss)
-
-        """jl = Bullet_boss(100,100,[100,100])
-        ls_balas_boss.add(jl)
-        ls_todos.add(jl)"""
 
         jugador = Jugador(500,200)
         jugador.paredes=ls_muros

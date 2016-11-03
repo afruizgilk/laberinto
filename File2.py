@@ -9,13 +9,14 @@ tipo.set_bold(True)
 teclas1 = tipo.render("Presione ESC para salir" , 1 , (255,0,0))
 pantalla.blit(teclas1,(100,100))
 pygame.display.flip()
-def worker():
+def worker(x,y,z):
     t = threading.currentThread()
     while getattr(t, "do_run", True):
         for i in range(10,100):
             pantalla.fill((0,0,0))
             pantalla.blit(teclas1,(i,100))
             pygame.display.flip()
+            print (x,y,z)
 
 def servicio():
     t = threading.currentThread()
@@ -28,13 +29,15 @@ def servicio():
 
 global w
 #Asignacion nombres y creacion de threads
-w = threading.Thread(target=worker, name='Worker' )  #Se asigna el nombre al Thread de Worker con la accion worker()
+lol=pygame.sprite.Group()
+w = threading.Thread(target=worker, name='Worker' , args=(1,2,lol))  #Se asigna el nombre al Thread de Worker con la accion worker()
 t = threading.Thread(target=servicio, name='Servicio') #Se asigna el nombre al Thread de Servicio con la accion servicio()
 
 
 #Se lanzan los threads
-w.start()
 t.start()
+w.start()
+
 
 while 1:
     for event in pygame.event.get():
