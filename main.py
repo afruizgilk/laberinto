@@ -46,7 +46,7 @@ def start():
                     if m.cursor == 2:#here is the Menu class function
                         sys.exit(0)
                     if m.cursor == 0:
-                        game.pantalla_inicial()
+                        game.start_1()
                     if m.cursor == 1:
                         print("Menu help")
                 pantalla.fill((51,51,51))
