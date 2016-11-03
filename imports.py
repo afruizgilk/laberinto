@@ -992,7 +992,7 @@ class Juego:
                     if event.key == pygame.K_ESCAPE:
                         terminar=True
                     if event.key == pygame.K_RETURN:
-                        self.start_1()
+                        self.start_0()
 
     def start_1(self, vida_j=100):
         global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos
